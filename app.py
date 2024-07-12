@@ -1,21 +1,26 @@
-from flask import Flask, render_template, request, redirect, url_for
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 
 app = Flask(__name__)
 app.secret_key = 'sua_chave_secreta_aqui'  # Mantenha isso seguro em produção
-login_manager = LoginManager()
-login_manager.init_app(app)
 
 # Exemplo simples de usuário (substitua por um modelo de usuário real)
-class User(UserMixin):
-    def __init__(self, username):
-        self.id = username
-        self.password = 'senha_encriptada_aqui'
+class User:
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
 
-@login_manager.user_loader
-def load_user(user_id):
-    # Substitua por lógica real para carregar usuário do banco de dados
-    return User(user_id)
+# Simulação de um banco de dados de usuários
+users_db = [
+    User('usuario1', 'senha1'),
+    User('usuario2', 'senha2')
+]
+
+# Função para verificar autenticação do usuário
+def user_is_authenticated(username, password):
+    for user in users_db:
+        if user.username == username and user.password == password:
+            return True
+    return False
 
 @app.route('/')
 def index():
@@ -26,25 +31,25 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = User(username)
 
         # Verificação de senha (substitua por lógica real)
-        if password == user.password:
-            login_user(user)
+        if user_is_authenticated(username, password):
             return redirect(url_for('dashboard'))
+        else:
+            return 'Credenciais inválidas. Tente novamente.'
 
     return render_template('login.html')
 
 @app.route('/dashboard')
-@login_required
 def dashboard():
     return 'Dashboard protegida'
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
+@app.route('/authenticated', methods=['POST'])
+def authenticated():
+    if user_is_authenticated(request.form['username'], request.form['password']):
+        return jsonify({'message': 'Authenticated'}), 200
+    else:
+        return jsonify({'message': 'Not Authenticated'}), 401
 
 if __name__ == '__main__':
     app.run(debug=True)
