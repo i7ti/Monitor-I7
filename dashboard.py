@@ -12,15 +12,16 @@ st.set_page_config(layout="wide")
 url = "https://firebasestorage.googleapis.com/v0/b/status-printer.appspot.com/o/serviceAccountKey.json?alt=media&token=f4767579-f2a7-469b-b773-750af9a04e3f"
 file_path = "serviceAccountKey.json"
 
-# Baixar o arquivo JSON
-try:
-    response = requests.get(url)
-    response.raise_for_status()
-    with open(file_path, 'wb') as f:
-        f.write(response.content)
-    st.success("Arquivo de credenciais baixado com sucesso.")
-except requests.exceptions.RequestException as e:
-    st.error(f"Erro ao baixar o arquivo de credenciais: {e}")
+# Baixar o arquivo JSON se não existir
+if not os.path.exists(file_path):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        with open(file_path, 'wb') as f:
+            f.write(response.content)
+        st.success("Arquivo de credenciais baixado com sucesso.")
+    except requests.exceptions.RequestException as e:
+        st.error(f"Erro ao baixar o arquivo de credenciais: {e}")
 
 # Verificar se o Firebase já está inicializado
 if not firebase_admin._apps:
@@ -88,25 +89,12 @@ if firebase_admin._apps:
             status_text = f"<span style='color: green;'>{status}</span>" if status == "Online" else f"<span style='color: red;'>{status}</span>"
             tabela.append([local['Local'], status_text, local['Impressoras'], local['Total PB'], local['Total Color']])
 
-        # Exibir tabela com tamanho das células ajustado
-        st.markdown("""
-        <style>
-        .dataframe {
-            width: 100% !important;
-        }
-        .dataframe td, .dataframe th {
-            width: 176px !important;
-            height: 70px !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # Converte a tabela para DataFrame e usa st.write com unsafe_allow_html para renderizar o HTML no status
+        # Exibir tabela usando st.dataframe para uma melhor interação
         df = pd.DataFrame(tabela, columns=colunas)
-        st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+        st.dataframe(df)
 
         # Verificar se há um local selecionado
-        query_params = st.query_params
+        query_params = st.experimental_get_query_params()
         selected_local = query_params.get("local", [None])[0]
 
         if selected_local:
