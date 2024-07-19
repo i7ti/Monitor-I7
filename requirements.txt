@@ -4,3 +4,4 @@ requests==2.32.3
 streamlit==1.36.0
 Flask==3.0.3
 Pyrebase4==4.8.0
+streamlit-autorefresh==0.1.0
