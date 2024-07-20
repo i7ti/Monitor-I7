@@ -1,3 +1,4 @@
+
 # -*- mode: python ; coding: utf-8 -*-
 
 
@@ -36,3 +37,4 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
+>>>>>>> 31e689760cdec86ea791db2580be3ea83470da7e

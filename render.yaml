@@ -6,3 +6,4 @@ services:
     region: oregon
     buildCommand: "pip install -r requirements.txt"
     startCommand: "streamlit run dashboard.py"
+>>>>>>> 31e689760cdec86ea791db2580be3ea83470da7e

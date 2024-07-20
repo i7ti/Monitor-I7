@@ -1,2 +1,44 @@
+# Arquivos de log
 *.log
 logs/
+
+# Compiled source
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Diretórios e arquivos do editor
+.idea/
+.vscode/
+
+# Variáveis de ambiente
+.env
+
+# Dependências
+*.egg-info/
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Pytest
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Flask específico
+instance/
+*.db
+
+# Streamlit
+streamlit_app/
+
+# Firebase
+firebase_credentials.json
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db

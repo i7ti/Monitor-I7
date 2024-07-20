@@ -1,52 +1,73 @@
-import streamlit as st
-import firebase_admin
-from firebase_admin import credentials, firestore
-import plotly.express as px
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #dashboardContainer img {
+            width: 150px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="loginContainer">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="Email" />
+        <input type="password" id="password" placeholder="Senha" />
+        <button onclick="login()">Login</button>
+        <p id="message"></p>
+    </div>
 
-# Inicializar Firebase
-cred = credentials.Certificate('C:/Users/Moises/Documents/Novo/serviceAccountKey.json')
-firebase_admin.initialize_app(cred)
-db = firestore.client()
+    <div class="container" id="dashboardContainer" style="display:none;">
+        <h2>Dashboard</h2>
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+        <p>Bem-vindo ao dashboard!</p>
+        <button onclick="logout()">Logout</button>
+    </div>
 
-# Função para obter dados do Firestore
-def get_data():
-    printers_ref = db.collection('printers')
-    docs = printers_ref.stream()
-    data = []
-    for doc in docs:
-        data.append(doc.to_dict())
-    return data
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if (localStorage.getItem('logged_in') === 'true') {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('dashboardContainer').style.display = 'block';
+            }
+        });
 
-# Layout do Streamlit
-st.sidebar.title('Monitor I7 T.I.')
-st.sidebar.markdown('### Menu')
-menu = ['Dashboard', 'Locais', 'Relatórios', 'Helpdesk', 'Contas', 'Notificações', 'Suprimentos', 'Downloads', 'Ajuda']
-choice = st.sidebar.selectbox('Selecione uma opção', menu)
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-st.title('Dashboard')
+            if (email && password) {
+                localStorage.setItem('logged_in', 'true');
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('dashboardContainer').style.display = 'block';
+            } else {
+                document.getElementById('message').innerText = 'Por favor, preencha todos os campos.';
+            }
+        }
 
-if choice == 'Dashboard':
-    st.header('Tickets')
-    st.markdown('Nenhum ticket em aberto.')
-
-    st.header('Locais')
-    locais = get_data()  # Obtém dados do Firestore
-    for local in locais:
-        st.write(local['cliente'], '-', local['setor'], '-', local['ip'])
-
-    st.header('Equipamentos')
-    for local in locais:
-        st.write(local['detalhes_impressora']['modelo'], '-', local['ip'])
-
-    st.header('Logs')
-    for local in locais:
-        st.write(local['timestamp'], '-', local['cliente'], '-', local['setor'])
-
-elif choice == 'Locais':
-    st.header('Locais')
-    locais = get_data()  # Obtém dados do Firestore
-    for local in locais:
-        st.write(local['cliente'], '-', local['setor'], '-', local['ip'])
-
-# Adicione mais seções conforme necessário
-
+        function logout() {
+            localStorage.removeItem('logged_in');
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('dashboardContainer').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
