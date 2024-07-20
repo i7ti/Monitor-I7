@@ -3,7 +3,6 @@ import pandas as pd
 import firebase_admin
 from firebase_admin import credentials, firestore
 import pyrebase
-import requests
 import os
 from dotenv import load_dotenv
 
@@ -25,29 +24,29 @@ def show_dashboard():
         "measurementId": os.getenv("MEASUREMENT_ID")
     }
 
-    firebase = pyrebase.initialize_app(firebase_config)
-    auth = firebase.auth()
-
-    # URL do arquivo JSON no Firebase Storage
-    url = "https://firebasestorage.googleapis.com/v0/b/status-printer.appspot.com/o/serviceAccountKey.json?alt=media&token=f4767579-f2a7-469b-b773-750af9a04e3f"
-    file_path = "serviceAccountKey.json"
-
-    # Baixar o arquivo JSON se não existir
-    if not os.path.exists(file_path):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            with open(file_path, 'wb') as f:
-                f.write(response.content)
-            st.success("Arquivo de credenciais baixado com sucesso.")
-        except requests.exceptions.RequestException as e:
-            st.error(f"Erro ao baixar o arquivo de credenciais: {e}")
+    try:
+        firebase = pyrebase.initialize_app(firebase_config)
+        auth = firebase.auth()
+        st.success("Pyrebase configurado com sucesso.")
+    except Exception as e:
+        st.error(f"Erro ao configurar o Pyrebase: {e}")
 
     # Verificar se o Firebase já está inicializado
     if not firebase_admin._apps:
-        # Inicializar Firebase Admin SDK com credenciais do arquivo JSON baixado
         try:
-            cred = credentials.Certificate(file_path)
+            # Configurar as credenciais diretamente com variáveis de ambiente
+            cred = credentials.Certificate({
+                "type": os.getenv("FIREBASE_TYPE"),
+                "project_id": os.getenv("FIREBASE_PROJECT_ID"),
+                "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID"),
+                "private_key": os.getenv("FIREBASE_PRIVATE_KEY").replace("\\n", "\n"),
+                "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
+                "client_id": os.getenv("FIREBASE_CLIENT_ID"),
+                "auth_uri": os.getenv("FIREBASE_AUTH_URI"),
+                "token_uri": os.getenv("FIREBASE_TOKEN_URI"),
+                "auth_provider_x509_cert_url": os.getenv("FIREBASE_AUTH_PROVIDER_X509_CERT_URL"),
+                "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_X509_CERT_URL")
+            })
             firebase_admin.initialize_app(cred)
             st.success("Firebase inicializado com sucesso.")
         except Exception as e:
@@ -56,13 +55,15 @@ def show_dashboard():
     # Função para obter dados do Firestore
     @st.cache_data
     def get_data():
-        db = firestore.client()
-        printers_ref = db.collection('impressoras')
-        docs = printers_ref.stream()
-        data = []
-        for doc in docs:
-            data.append(doc.to_dict())
-        return data
+        try:
+            db = firestore.client()
+            printers_ref = db.collection('impressoras')
+            docs = printers_ref.stream()
+            data = [doc.to_dict() for doc in docs]
+            return data
+        except Exception as e:
+            st.error(f"Erro ao obter dados: {e}")
+            return []
 
     # Função para exibir detalhes do local
     def exibir_detalhes_local(local_name):
@@ -114,8 +115,7 @@ def show_dashboard():
 
         # Construir a tabela com os dados dos locais
         for local in locais:
-            # Obter o status do local e formatar como texto HTML
-            status = local.get('Status', 'Offline')  # Default para 'Offline' caso não exista status
+            status = local.get('Status', 'Offline')
             status_text = f"<span style='color: green;'>Online</span>" if status == "Online" else f"<span style='color: red;'>Offline</span>"
             tabela.append([local.get('Local', 'N/A'), status_text, local.get('Impressoras', 'N/A'), local.get('Total PB', 'N/A'), local.get('Total Color', 'N/A')])
 
