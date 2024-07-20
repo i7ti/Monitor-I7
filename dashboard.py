@@ -4,10 +4,9 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import pyrebase
 import os
-from dotenv import load_dotenv
 
-# Carregar variáveis de ambiente do arquivo .env
-load_dotenv()
+# Carregar variáveis de ambiente do sistema
+# As variáveis já estão carregadas no ambiente de produção do Render
 
 def show_dashboard():
     st.title("Dashboard")
